@@ -1,39 +1,63 @@
-![CI logo](https://codeinstitute.s3.amazonaws.com/fullstack/ci_logo_small.png)
+# Walkthrough starting up Django Rest
 
-Welcome,
+1. pip install django
+2. django-admin startproject drf_api .
+3. pip install django-cloudinary-storage
+4. pip install Pillow (passes image processing capabilities)
+5. Add to installed apps in settings.py
+6. Create env.py file
+7. Add api-key to it
+8. Import the env.py file into setting with:
 
-This is the Code Institute student template for Codeanywhere. If you are using Gitpod then you need [this template](https://github.com/Code-Institute-Org/gitpod-full-template) instead.  We have preinstalled all of the tools you need to get started. It's perfectly ok to use this template as the basis for your project submissions.
+import os
 
-You can safely delete this README.md file, or change it for your own project. Please do read it at least once, though! It contains some important information about Codeanywhere and the extensions we use. Some of this information has been updated since the video content was created. The last update to this file was: **August 30th, 2023**
+if os.path.exists('env.py'):
+import env
 
-## Codeanywhere Reminders
+CLOUDINARY_STORAGE = {
+'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL')
+}
 
-To run a frontend (HTML, CSS, Javascript only) application in Codeanywhere, in the terminal, type:
+MEDIA_URL = '/media/'
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-`python3 -m http.server`
+9. Then we start our app with
 
-A button should appear to click: _Open Preview_ or _Open Browser_.
+python3 manage.py startapp profiles
 
-To run a frontend (HTML, CSS, Javascript only) application in Codeanywhere with no-cache, you can use this alias for `python3 -m http.server`.
+10. Add this to installed apps in settings.py
 
-`http_server`
+11. Create the database model
 
-To run a backend Python file, type `python3 app.py`, if your Python file is named `app.py` of course.
+12. Import Signal:
 
-A button should appear to click: _Open Preview_ or _Open Browser_.
+Examples of built-in Model signals include: pre_save, post_save, pre_delete and post_delete.
+So, I’ll import post_save at the top from Django’s signals.
+Now I’ll listen for the post_save signal coming from the User model by calling the connect function.
+Inside, I’ll pass ‘create_profile’, which is the function I’d like to run every time  
+and specify User as the model we’re expecting to receive the signal from.
+Now we have to define the create_profile function before we pass it as an argument. Because we are  
+passing this function to the post_save.connect method, it requires the following arguments:  
+the sender model, its instance, created - which is a boolean value of whether or  
+not the instance has just been created, and kwargs. Inside the create_profile function,  
+if created is True, we’ll create a profile whose owner is going to be that user.
 
-In Codeanywhere you have superuser security privileges by default. Therefore you do not need to use the `sudo` (superuser do) command in the bash terminal in any of the lessons.
+13. Then import it into the admin.py
 
-To log into the Heroku toolbelt CLI:
+from .models import Profile
 
-1. Log in to your Heroku account and go to _Account Settings_ in the menu under your avatar.
-2. Scroll down to the _API Key_ and click _Reveal_
-3. Copy the key
-4. In Codeanywhere, from the terminal, run `heroku_config`
-5. Paste in your API key when asked
+admin.site.register(Profile)
 
-You can now use the `heroku` CLI program - try running `heroku apps` to confirm it works. This API key is unique and private to you so do not share it. If you accidentally make it public then you can create a new one with _Regenerate API Key_.
+14. Migrate
 
----
+python3 manage.py makemigrations
 
-Happy coding!
+python3 manage.py migrate
+
+15. Create the superuser
+
+python3 manage.py createsuperuser
+
+16. After checking everything works, create requirements.txt
+
+pip freeze > requirements.txt

@@ -61,3 +61,34 @@ python3 manage.py createsuperuser
 16. After checking everything works, create requirements.txt
 
 pip freeze > requirements.txt
+
+## Django Rest framework
+
+Now it is time to install Django Rest framework and continue.
+
+1. Use prompt
+
+pip install djangorestframework
+
+2. Add it to installed apps
+
+3. Create necessary code in views.py
+
+"""
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .models import Profile
+
+class ProfileList(APIView):
+def get(self, request):
+profiles = Profile.objects.all()
+return Response(profiles)
+
+"""
+
+4. Create a urls.py file in the app folder and add the url view.
+
+5. Now let’s include profile urls in our main app. In the main urls.py, I’ll import ‘include’ from django urls and include profile urls at the bottom.
+
+6. After all of this is made we need to create a serializer that transforms data format between JSON and Python code.
+   We create a serializers.py file in the profiles app.

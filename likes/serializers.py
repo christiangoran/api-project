@@ -1,9 +1,9 @@
 from django.db import IntegrityError
 from rest_framework import serializers
-from .models import Likes
+from likes.models import Likes
 
 
-class LikesSerializer(serializers.ModelSerializer):
+class LikeSerializer(serializers.ModelSerializer):
     """
     Serializer for the Like model
     The create method handles the unique constraint on 'owner' and 'post'
@@ -12,14 +12,12 @@ class LikesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Likes
-        fields = [
-            'id', 'owner', 'post', 'created_at'
-        ]
+        fields = ['id', 'created_at', 'owner', 'post']
 
-    def create(self, validate_data):
+    def create(self, validated_data):
         try:
-            return super().create(validate_data)
+            return super().create(validated_data)
         except IntegrityError:
-            raise serializers.ValidateError({
+            raise serializers.ValidationError({
                 'detail': 'possible duplicate'
             })

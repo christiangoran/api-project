@@ -92,3 +92,53 @@ return Response(profiles)
 
 6. After all of this is made we need to create a serializer that transforms data format between JSON and Python code.
    We create a serializers.py file in the profiles app.
+
+## Repetition
+
+1. Create an app
+2. Add the app to settings.py
+3. Add the model to models.py
+4. Migrate the models
+5. Create serializer (import the model)
+6. Create the view (import model and serializer)
+7. Create app urls.py and add code
+8. Add code to Django urls.py
+
+Done
+
+## Django Rest Auth
+
+1. Install Django Rest Auth use
+
+pip3 install dj-rest-auth==2.1.9 (for older version)
+
+or
+
+pip3 install dj-rest-auth
+
+2. Then add following to settings.py
+
+   'rest_framework.authtoken',
+   'dj_rest_auth',
+
+3. Add following to root urls.py
+
+path('auth/', include('dj_rest_auth.urls')),
+
+4. Then migrate database
+
+5. Then install Django-allauth
+
+pip3 install 'dj-rest-auth[with_social]'
+
+6. Then we need to add the following to settings.py apps
+
+'django-contrib.sites',
+'allauth',
+'allauth.account',
+'allauth.socialaccount',
+'dj_rest_auth.registration',
+
+and also set
+
+SITE_ID = 1

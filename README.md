@@ -253,3 +253,158 @@ Then I will get this format:
 
 "created_at": "3 days, 16 hours ago",
 "updated_at": "3 days, 16 hours ago",
+
+## DEPLOYMENT
+
+1. Login to ElephantSQL.com and create a new instance. Copy the url from the newly created instance.
+2. Login to Heroku and create a new app
+
+   1. Afterwards go to settings and enter following in config vars:
+
+   DATABASE\*URL : "postgres://yotnuypp:WwDkSCsYr******\*\*\*******\*******\*\*******"
+
+3. In the terminal, install dj_database_url and psycopg2, both of these are needed to connect to your external database
+
+pip3 install dj_database_url==0.5.0 psycopg2
+
+4. In your settings.py file, import dj_database_url underneath the import for os
+
+import os
+import dj_database_url
+
+5. Update the DATABASES section to the following
+
+if 'DEV' in os.environ:
+DATABASES = {
+'default': {
+'ENGINE': 'django.db.backends.sqlite3',
+'NAME': BASE_DIR / 'db.sqlite3',
+}
+}
+else:
+DATABASES = {
+'default': dj_database_url.parse(os.environ.get("DATABASE_URL"))
+}
+
+This will ensure that when you have an environment variable for DEV in your environment the code will connect to the sqlite database here in your IDE. Otherwise it will connect to your external database, provided the DATABASE_URL environment variable exist.
+
+6. In your env.py file, add a new environment variable with the key set to DATABASE_URL, and the value to your ElephantSQL database URL
+
+os.environ['DATABASE_URL'] = "<your PostgreSQL URL here>"
+
+7. Temporarily comment out the DEV environment variable so that your IDE can connect to your external database
+
+os.environ['CLOUDINARY_URL'] = "cloudinary://..."
+os.environ['SECRET_KEY'] = "Z7o..."
+'# os.environ['DEV'] = '1'
+os.environ['DATABASE_URL'] = "postgres://..."
+
+8. Back in your settings.py file, add a print statement to confirm you have connected to the external database
+
+if 'DEV' in os.environ:
+DATABASES = {
+'default': {
+'ENGINE': 'django.db.backends.sqlite3',
+'NAME': BASE_DIR / 'db.sqlite3',
+}
+}
+else:
+DATABASES = {
+'default': dj_database_url.parse(os.environ.get("DATABASE_URL"))
+}
+print('connected')
+
+9. In the terminal, -–dry-run your makemigrations to confirm you are connected to the external database
+
+python3 manage.py makemigrations --dry-run
+
+If you are, you should see the ‘connected’ message printed to the terminal
+
+10. Remove the print statement
+
+11. Migrate your database models to your new database
+
+12. Create a superuser for your new database
+
+python3 manage.py createsuperuser
+
+### Confirmation that database was created
+
+1. On the ElephantSQL page for your database, in the left side navigation, select “BROWSER”
+
+2. Click the Table queries button, select auth_user
+
+3. When you click “Execute”, you should see your newly created superuser details displayed. This confirms your tables have been created and you can add data to your database
+
+### Preparing for deployment
+
+Now that your external database has all its tables and a superuser, we will prepare your project for deployment to Heroku. This will include installing a package needed to run the project on Heroku, fixing a few environment variables, and creating a Procfile file that will provide the commands to Heroku to build and run the project.
+
+1. In the terminal of your IDE workspace, install gunicorn
+
+pip3 install gunicorn django-cors-headers
+
+2. Update your requirements.txt
+
+pip3 freeze > requirements.txt
+
+3. As you may remember from previous projects, Heroku also requires a Procfile. Create this file now. Remember, it must be named correctly and not have any file extension, otherwise Heroku won’t recognise it
+
+Inside the Procfile write these two commands;
+
+release: python manage.py makemigrations && python manage.py migrate
+web: gunicorn drf_api.wsgi
+
+4. In your settings.py file, update the value of the ALLOWED_HOSTS variable to include your Heroku app’s URL
+
+ALLOWED_HOSTS = ['localhost', '<your_app_name>.herokuapp.com']
+
+5. Add corsheaders to INSTALLED_APPS
+
+INSTALLED_APPS = [
+...
+'dj_rest_auth.registration',
+'corsheaders',
+...
+]
+
+6. Add corsheaders middleware to the TOP of the MIDDLEWARE
+
+SITE_ID = 1
+MIDDLEWARE = [
+'corsheaders.middleware.CorsMiddleware',
+...
+]
+
+7. Under the MIDDLEWARE list, set the ALLOWED_ORIGINS for the network requests made to the server with the following code:
+
+if 'CLIENT_ORIGIN' in os.environ:
+CORS_ALLOWED_ORIGINS = [
+os.environ.get('CLIENT_ORIGIN')
+]
+else:
+CORS_ALLOWED_ORIGIN_REGEXES = [
+r"^https://.*\.gitpod\.io$",
+]
+
+_info_
+
+Here the allowed origins are set for the network requests made to the server. The API will use the CLIENT_ORIGIN variable, which is the front end app's url. We haven't deployed that project yet, but that's ok. If the variable is not present, that means the project is still in development, so then the regular expression in the else statement will allow requests that are coming from your IDE.
+
+### Deployment
+
+With those changes in place, we can now deploy our project to Heroku.
+
+1. Back on the Heroku dashboard for your new app, open the Settings tab
+
+2. Add two more Config Vars:
+
+   SECRET_KEY (you can make one up, but don’t use the one that was originally in the settings.py file!)
+
+   CLOUDINARY_URL, and for the value, copy in your Cloudinary URL from your env.py file (do not add quotation marks!)
+
+3. Open the Deploy tab
+4. In the Deployment method section, select Connect to GitHub
+5. Search for your repo and click Connect
+
+6. As we already have all our changes pushed to GitHub, we will use the Manual deploy section and click Deploy Branch.

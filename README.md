@@ -142,3 +142,114 @@ pip3 install 'dj-rest-auth[with_social]'
 and also set
 
 SITE_ID = 1
+
+7. Then add the following line to root urls.py
+
+   path('dj-rest-auth/', include('dj_rest_auth.urls')),
+
+8. Then we have to install a simpel JWT library
+
+pip3 install djangorestframework-simplejwt
+
+First, we have to install the simple jwt library.
+Because DRF doesn’t support JWT tokens for the browser interface  
+out-of-the-box, we’ll need to use session authentication in development.
+And for Production we’ll use Tokens.
+This will allow us to continue to be able to log into our API as we work on it.
+
+9. To make this distinction, I’ll set ‘DEV’ to ‘1’ in the env.py file.
+
+10. Add this to settings.py to use the DEV-value to see if we are in development or production:
+
+REST_FRAMEWORK = {
+'DEFAULT_AUTHENTICATION_CLASSES': [
+'rest_framework.authentication.TokenAuthentication'
+if 'DEV' in os.environ else
+'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
+],
+
+}
+
+11. To enable token authentication, we’ll also have to set REST_USE_JWT to True.
+
+and
+
+To make sure they’re sent over HTTPS only, we will set JWT_AUTH_SECURE to True as well.
+
+We also need to declare the cookie names for the access and refresh tokens, as we’ll be using both.
+
+JWT_AUTH_COOKIE = 'my-app-auth'
+JWT_AUTH_REFRESH_COOKIE = 'my-app-refresh'
+
+12. Create a serializer in Django folder and add following code:
+
+from dj_rest_auth.serializers import UserDetailsSerializer
+from rest_framework import serializers
+
+class CurrentUserSerializer(UserDetailsSerializer):
+profile_id = serializers.ReadOnlyField(source='profile.id')
+profile_image = serializers.ReadOnlyField(source='profile.image.url')
+
+    class Meta(UserDetailsSerializer.Meta):
+        fields = UserDetailsSerializer.Meta.fields + (
+            'profile_id', 'profile_image'
+        )
+
+13. Now that we’ve created the file, let’s overwrite the default USER_DETAILS_SERIALIZER in settings.py.
+
+REST_AUTH_SERIALIZERS = {
+'USER_DETAILS_SERIALIZER': 'drf_api.serializers.CurrentUserSerializer'
+}
+
+14. Finally, as we’ve finished installing everything, let’s run our migrations again.
+
+Now JSON Web Tokens should be installed.
+
+15. Since we installed new dependencies make a pip3 freeze > requirements.txt
+
+## Add pagination
+
+Add this to settings.py
+
+REST_FRAMEWORK = {
+'DEFAULT_AUTHENTICATION_CLASSES': [(
+'rest_framework.authentication.SessionAuthentication'
+if 'DEV' in os.environ
+else 'dj_rest_auth.jwt_auth.JWTCookieAuthentication'
+)],
+'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+'PAGE_SIZE': 10,
+}
+
+## Set JSON as default
+
+Write this in settings.py
+
+if 'DEV' not in os.environ:
+REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [
+'rest_framework.renderers.JSONRenderer',
+]
+
+## Change datetimeformat
+
+settings.py:
+'DATETIME_FORMAT': '%d %b %Y',
+
+or for a different format on the time
+
+serializers.py:
+from django.contrib.humanize.templatetags.humanize import naturaltime
+
+created_at = serializers.SerializerMethodField()
+updated_at = serializers.SerializerMethodField()
+
+def get_created_at(self, obj):
+return naturaltime(obj.created_at)
+
+def get_updated_at(self, obj):
+return naturaltime(obj.updated_at)
+
+Then I will get this format:
+
+"created_at": "3 days, 16 hours ago",
+"updated_at": "3 days, 16 hours ago",

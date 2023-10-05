@@ -61,6 +61,17 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', 'taskmanager-heroku.herokuapp.com']
 
+if 'CLIENT_ORIGIN' in os.environ:
+    CORS_ALLOWED_ORIGINS = [
+        os.environ.get('CLIENT_ORIGIN'),
+        os.environ.get('CLIENT_ORIGIN_DEV')
+    ]
+
+CSRF_TRUSTED_ORIGINS = [os.environ.get(
+    'CLIENT_ORIGIN_DEV',
+    'CLIENT_ORIGIN',
+)]
+
 
 # Application definition
 

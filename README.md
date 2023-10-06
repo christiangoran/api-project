@@ -1,4 +1,4 @@
-# Walkthrough starting up Django Rest
+# Django Rest
 
 1. pip install django
 2. django-admin startproject drf_api .

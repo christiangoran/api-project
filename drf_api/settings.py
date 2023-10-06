@@ -61,7 +61,7 @@ SECRET_KEY = 'django-insecure-$t480m%60@(q8&idugbj*$sfs56lthspo_nazj**$prq9girb_
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', 'taskmanager-heroku.herokuapp.com',
-                 'taskmanager-heroku-5052155856ae.herokuapp.com']
+                 os.environ.get('ALLOWED_HOSTS')]
 
 # Application definition
 

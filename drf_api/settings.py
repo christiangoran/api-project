@@ -60,7 +60,8 @@ SECRET_KEY = 'django-insecure-$t480m%60@(q8&idugbj*$sfs56lthspo_nazj**$prq9girb_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', 'taskmanager-heroku.herokuapp.com']
+ALLOWED_HOSTS = ['localhost', 'taskmanager-heroku.herokuapp.com',
+                 'taskmanager-heroku-5052155856ae.herokuapp.com']
 
 # Application definition
 

@@ -261,7 +261,7 @@ Then I will get this format:
 
    1. Afterwards go to settings and enter following in config vars:
 
-   DATABASE\*URL : "postgres://yotnuypp:WwDkSCsYr******\*\*\*******\*******\*\*******"
+   DATABASE\*URL : "postgres://yotnuypp:WwDkSCsYr**\*\***\*\*\***\*\***\***\*\***\*\***\*\***"
 
 3. In the terminal, install dj_database_url and psycopg2, both of these are needed to connect to your external database
 
@@ -408,3 +408,60 @@ With those changes in place, we can now deploy our project to Heroku.
 5. Search for your repo and click Connect
 
 6. As we already have all our changes pushed to GitHub, we will use the Manual deploy section and click Deploy Branch.
+
+### Fix dj-rest-auth bug
+
+Problem Statement
+
+It turns out that dj-rest-auth has a bug that doesn’t allow users to log out (ref: DRF Rest Auth Issues).
+
+The issue is that the samesite attribute we set to ‘None’ in settings.py (JWT_AUTH_SAMESITE = 'None') is not passed to the logout view. This means that we can’t log out, but must wait for the refresh token to expire instead.
+Proposed Solution
+
+One way to fix this issue is to have our own logout view, where we set both cookies to an empty string and pass additional attributes like secure, httponly and samesite, which was left out by mistake by the library.
+
+Follow the steps below to fix this bug
+
+1. In drf_api/views.py, import JWT_AUTH settings from settings.py.
+
+from .settings import (
+JWT_AUTH_COOKIE, JWT_AUTH_REFRESH_COOKIE, JWT_AUTH_SAMESITE,
+JWT_AUTH_SECURE,
+)
+
+2. Write a logout view. Looks like quite a bit, but all that’s happening here is that we’re setting the value of both the access token (JWT_AUTH_COOKIE) and refresh token (JWT_AUTH_REFRESH_COOKIE) to empty strings. We also pass samesite=JWT_AUTH_SAMESITE, which we set to ’None’ in settings.py and make sure the cookies are httponly and sent over HTTPS,
+
+@api_view(['POST'])
+def logout_route(reguest):
+response = Response()
+response.set_cookie(
+key=JWT_AUTH_COOKIE,
+value='',
+httponly=True,
+expires='Thu, 01 Jan 1970 00:00:00 GMT',
+max_age=0,
+samesite=JWT_AUTH_SAMESITE,
+secure=JWT_AUTH_SECURE,
+)
+response.set_cookie(
+key=JWT_AUTH_REFRESH_COOKIE,
+value='',
+httponly=True,
+expires='Thu, 01 Jan 1970 00:00:00 GMT',
+max_age=0,
+samesite=JWT_AUTH_SAMESITE,
+secure=JWT_AUTH_SECURE,
+)
+return response
+
+#### Step 2 urls.py
+
+3. Now that the logout view is there, it has to be included in drf_api/urls.py . The logout_route also needs to be imported,
+
+from .views import root_route, logout_route
+
+4.  ... and then included in the urlpatterns list. The important thing to note here is that our logout_route has to be placed above the default dj-rest-auth urls, so that it is matched first.
+
+path('dj-rest-auth/logout/', logout_route),
+
+5. Push to Github and redeploy with Heroku

@@ -465,3 +465,8 @@ from .views import root_route, logout_route
 path('dj-rest-auth/logout/', logout_route),
 
 5. Push to Github and redeploy with Heroku
+
+However, in order to use this API with the upcoming Advanced React walkthrough project, we’d like to ask you to add two environment variables in the SETTINGS.py file.
+
+1.  ALLOWED_HOST, so that it’s not hardcoded and you could spin up multiple API instances, as they would all be deployed to different URLs.
+2.  CLIENT_ORIGIN_DEV, so that you can access your deployed API when developing the client-side app in gitpod.
